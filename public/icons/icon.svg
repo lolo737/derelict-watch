@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Derelict Watch">
+  <rect width="512" height="512" rx="96" fill="#0b5d45"/>
+  <!-- A terraced house with one lit and one dark window, watched over by a map pin -->
+  <path d="M96 252 256 120l160 132v164a12 12 0 0 1-12 12H108a12 12 0 0 1-12-12z" fill="#ffffff"/>
+  <rect x="138" y="270" width="78" height="66" rx="6" fill="#063a2b"/>
+  <path d="M138 270l78 66M216 270l-78 66" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+  <rect x="296" y="270" width="78" height="66" rx="6" fill="#e3f1ea" stroke="#0b5d45" stroke-width="8"/>
+  <rect x="226" y="350" width="60" height="78" rx="6" fill="#0b5d45"/>
+  <path d="M256 32c-38 0-68 30-68 67 0 50 68 117 68 117s68-67 68-117c0-37-30-67-68-67z" fill="#ffbf47" stroke="#063a2b" stroke-width="10"/>
+  <circle cx="256" cy="99" r="24" fill="#063a2b"/>
+</svg>

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Derelict Watch</title>
+  <meta name="description" content="An independent community project: neighbours in Ireland photograph and report vacant and derelict buildings.">
+  <meta name="theme-color" content="#0b5d45">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Derelict Watch">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css">
+  <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Optional: created by `npm run config` or by copying config.example.js. Absent = demo mode. -->
+  <script src="config.js" onerror="void 0"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="#report" aria-label="Derelict Watch, home">
+        <img src="icons/icon.svg" alt="" width="36" height="36">
+        <span><strong>Derelict</strong> Watch</span>
+      </a>
+      <button id="outbox-btn" class="outbox-pill" type="button" hidden aria-live="polite">
+        <span id="outbox-count">0</span> waiting to send
+      </button>
+    </div>
+    <p class="independence-strip">Independent community project &middot; not affiliated with any government body</p>
+    <nav class="tabs" aria-label="Main">
+      <a href="#report" data-tab="report">Report</a>
+      <a href="#map" data-tab="map">Map</a>
+      <a href="#list" data-tab="list">List</a>
+      <a href="#about" data-tab="about">About</a>
+    </nav>
+  </header>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <main id="main" tabindex="-1">
+    <!-- ============================== REPORT ============================== -->
+    <section id="view-report" class="view" aria-labelledby="report-h">
+      <h1 id="report-h">Report an empty building</h1>
+      <p class="lede">Seen a house or shop that has sat empty on your street? Photograph it, pin it, and tell us how long it has been dark. It takes about a minute.</p>
+
+      <div class="privacy-card" id="privacy-card">
+        <h2>Before you take a photo</h2>
+        <ul>
+          <li><strong>Buildings, not people.</strong> Wait until nobody is in the frame. Do not photograph number plates.</li>
+          <li>If someone or a car still sneaks in, use <strong>Blur an area</strong> to pixelate it before sending.</li>
+          <li>Stay on the public footpath. Never enter a property, and never photograph through windows.</li>
+          <li>Location data hidden in the photo file is <strong>removed on your phone</strong> before upload. Only the pin you place is shared.</li>
+        </ul>
+        <label class="check"><input type="checkbox" id="privacy-ok"> I understand: this report is about a building, not about anyone who lives or lived there.</label>
+      </div>
+
+      <form id="report-form" novalidate>
+        <fieldset class="step" id="step-photo">
+          <legend><span class="step-num">1</span> Photo</legend>
+          <div class="camera" id="camera" hidden>
+            <video id="camera-video" playsinline muted aria-label="Camera viewfinder"></video>
+            <div class="camera-actions">
+              <button type="button" class="btn btn-ghost" id="camera-cancel">Cancel</button>
+              <button type="button" class="btn shutter" id="camera-shutter" aria-label="Take photo"></button>
+              <span aria-hidden="true" class="spacer"></span>
+            </div>
+          </div>
+          <div class="photo-preview" id="photo-preview" hidden>
+            <canvas id="photo-canvas" aria-label="Your photo. In blur mode, drag across an area to pixelate it."></canvas>
+            <p class="hint" id="blur-hint" hidden>Drag a box over any face or number plate. Each box is pixelated.</p>
+            <div class="row">
+              <button type="button" class="btn btn-ghost" id="blur-toggle" aria-pressed="false">Blur an area</button>
+              <button type="button" class="btn btn-ghost" id="blur-undo" disabled>Undo blur</button>
+              <button type="button" class="btn btn-ghost" id="photo-retake">Retake</button>
+            </div>
+          </div>
+          <div class="row" id="photo-buttons">
+            <button type="button" class="btn" id="camera-open">Open camera</button>
+            <label class="btn btn-ghost file-btn">Choose a photo
+              <input type="file" id="photo-file" accept="image/*" capture="environment">
+            </label>
+          </div>
+          <p class="error" data-error="photo" aria-live="polite"></p>
+        </fieldset>
+
+        <fieldset class="step">
+          <legend><span class="step-num">2</span> Where is it?</legend>
+          <div class="row">
+            <button type="button" class="btn btn-ghost" id="locate-btn">Use my location</button>
+            <span class="hint" id="locate-status" aria-live="polite"></span>
+          </div>
+          <div id="pick-map" class="map pick-map" role="application" aria-label="Map. Tap or drag the pin to the building's front door."></div>
+          <p class="hint">Tap the map or drag the pin onto the building. Pin: <output id="pin-readout">not set</output></p>
+          <p class="error" data-error="location" aria-live="polite"></p>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="house_number">House number or name</label>
+              <input id="house_number" name="house_number" autocomplete="off" maxlength="40" required>
+              <p class="error" data-error="house_number"></p>
+            </div>
+            <div class="field">
+              <label for="street">Street</label>
+              <input id="street" name="street" autocomplete="off" maxlength="120" required>
+              <p class="error" data-error="street"></p>
+            </div>
+            <div class="field">
+              <label for="town">Town, village or area</label>
+              <input id="town" name="town" autocomplete="off" maxlength="80" required>
+              <p class="error" data-error="town"></p>
+            </div>
+            <div class="field">
+              <label for="county">County</label>
+              <select id="county" name="county" required><option value="">Choose&hellip;</option></select>
+              <p class="error" data-error="county"></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="step">
+          <legend><span class="step-num">3</span> What do you know?</legend>
+          <fieldset class="sub">
+            <legend>Roughly how long has it been empty?</legend>
+            <div class="chips" id="band-chips"></div>
+            <p class="error" data-error="empty_band"></p>
+          </fieldset>
+          <fieldset class="sub">
+            <legend>Which parts are empty?</legend>
+            <label class="check"><input type="checkbox" name="upstairs_empty"> Upstairs (flats or rooms over the shop)</label>
+            <label class="check"><input type="checkbox" name="downstairs_empty"> Downstairs / ground floor</label>
+            <p class="error" data-error="units"></p>
+          </fieldset>
+          <div class="field">
+            <label for="notes">Notes <span class="optional">(optional)</span></label>
+            <textarea id="notes" name="notes" rows="3" maxlength="500" placeholder="e.g. boarded windows, roof slates missing, post piling up. Please don't name people."></textarea>
+            <p class="hint"><output id="notes-count">0</output>/500</p>
+            <p class="error" data-error="notes"></p>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Send report</button>
+        <p class="hint center" id="mode-note"></p>
+      </form>
+    </section>
+
+    <!-- ================================ MAP =============================== -->
+    <section id="view-map" class="view" aria-labelledby="map-h" hidden>
+      <h1 id="map-h">Reported buildings</h1>
+      <p class="lede" id="map-summary">Loading&hellip;</p>
+      <div id="reports-map" class="map reports-map" role="region" aria-label="Map of reported buildings"></div>
+      <p class="hint">Prefer a list? <a href="#list">See every report as a list</a>.</p>
+    </section>
+
+    <!-- ================================ LIST ============================== -->
+    <section id="view-list" class="view" aria-labelledby="list-h" hidden>
+      <h1 id="list-h">All reports</h1>
+      <div class="field inline">
+        <label for="county-filter">County</label>
+        <select id="county-filter"><option value="">All counties</option></select>
+      </div>
+      <p class="lede" id="list-summary" aria-live="polite"></p>
+      <ol class="report-list" id="report-list"></ol>
+    </section>
+
+    <!-- ================================ ABOUT ============================= -->
+    <section id="view-about" class="view prose" aria-labelledby="about-h" hidden>
+      <h1 id="about-h">About Derelict Watch</h1>
+      <p><strong>Derelict Watch is an independent community project.</strong> It is not run by, funded by, or affiliated with any government department, local authority or State body. Reports here are not official records and are not a complaint or a notice to any authority.</p>
+      <p>Official vacancy surveys are slow and expensive. Neighbours already know which houses have been dark for years. This app lets them say so: a photo, a pin, and a rough idea of how long.</p>
+      <h2>Privacy</h2>
+      <ul>
+        <li>Reports are about buildings. Please never include people, faces, number plates or names.</li>
+        <li>Photos are shrunk and re-encoded on your phone. GPS, camera model and other hidden metadata in the original file are stripped before upload.</li>
+        <li>No account, no name, no email. The app does not use cookies or analytics.</li>
+        <li>Map tiles are loaded from OpenStreetMap, whose servers see your IP address like any website.</li>
+        <li>Anyone can flag a report. Three flags hide it until a moderator has a look.</li>
+      </ul>
+      <h2>Your reports waiting to send</h2>
+      <div id="outbox-list"><p class="hint">Nothing waiting.</p></div>
+      <button type="button" class="btn btn-ghost" id="sync-btn">Try sending now</button>
+      <h2>Credits</h2>
+      <p>Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. Mapping by <a href="https://leafletjs.com">Leaflet</a>. Open source under the MIT licence.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Derelict Watch &middot; an independent, open-source community project. Not a government service.</p>
+  </footer>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/markercluster/leaflet.markercluster.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

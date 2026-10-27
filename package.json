@@ -1,0 +1,22 @@
+{
+  "name": "derelict-watch",
+  "version": "1.0.0",
+  "description": "Independent community PWA: neighbours in Ireland photograph and report vacant and derelict buildings. Supabase backend.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "Niall O'Hara",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "dev": "node scripts/serve.js",
+    "config": "node scripts/write-config.js",
+    "test": "node --test \"test/*.test.js\"",
+    "check:sw": "node scripts/check-shell.js"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.6"
+  }
+}
